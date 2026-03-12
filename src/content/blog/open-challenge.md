@@ -15,6 +15,6 @@ To make this more comfortable for you, I will cover a full week of training at D
 
 You know where to find me. You've been watching my traffic.
 
-Call to make arrangements for scheduling the match.
+Call or email to make arrangements for scheduling the match: theanderproject@gmail.com
 
 — Vincent L. Anderson
