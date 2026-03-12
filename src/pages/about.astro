@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/BlogPost.astro';
+---
+
+<Layout
+	title="About"
+	description="Security research and systems programming."
+	pubDate={new Date('2026-03-11')}
+>
+	<p>
+		<strong>Transit Observer</strong> documents ongoing security research, infrastructure forensics,
+		and deep dives into systems code.
+	</p>
+
+	<h3>Series</h3>
+	<ul>
+		<li>
+			<strong>Infrastructure MITM Investigation</strong> — An ISP subscriber investigates
+			anomalous network behavior targeting LLM provider connections. Tcpdump analysis, TTL forensics,
+			and the case for a transparent TCP proxy at the ISP-to-transit boundary.
+		</li>
+		<li>
+			<strong>Actually Reading jart/cosmopolitan</strong> — One file at a time through Justine Tunney's
+			cosmopolitan libc. Each entry builds on the last. No skimming, no summaries — actually reading the code.
+		</li>
+	</ul>
+
+	<h3>Author</h3>
+	<p>
+		Written by Vincent L. Anderson. Published via GitHub Pages.
+	</p>
+</Layout>
