@@ -1,0 +1,91 @@
+{
+  "description": "Infrastructure MITM Investigation series. Each entry runs network probes and generates analysis.",
+  "probeTargets": {
+    "openai_ws": "ws.chatgpt.com",
+    "openai_https": "chatgpt.com",
+    "openai_api": "api.openai.com",
+    "openai_auth": "auth.openai.com",
+    "anthropic": "api.anthropic.com",
+    "github": "api.github.com"
+  },
+  "files": [
+    {
+      "slug": "the-silent-hop",
+      "probes": ["mtr"],
+      "targets": ["openai_ws", "openai_https", "openai_api", "anthropic"],
+      "note": "Hop 8 discovery — MTR to all LLM providers, document the silent node at the Cogent transit boundary",
+      "existing": true
+    },
+    {
+      "slug": "websocket-downgrade",
+      "probes": ["tcpdump"],
+      "targets": ["openai_ws", "openai_https"],
+      "note": "TCP FIN injection on WebSocket, post-handshake timing, fallback to HTTPS",
+      "existing": true
+    },
+    {
+      "slug": "quic-proof",
+      "probes": ["tcpdump"],
+      "targets": ["openai_ws", "openai_https"],
+      "note": "TCP/QUIC asymmetry — same client, same service, different transport, different outcome",
+      "existing": true
+    },
+    {
+      "slug": "all-roads-through-ord",
+      "probes": ["tcpdump", "mtr"],
+      "targets": ["openai_ws", "openai_https", "openai_api", "openai_auth", "anthropic"],
+      "note": "TTL uniformity, latency anomaly, anycast hijacking mechanism, embedded CDN PoPs",
+      "existing": true
+    },
+    {
+      "slug": "against-the-mundane",
+      "probes": ["mtr", "tcpdump"],
+      "targets": ["openai_ws", "openai_https", "openai_api", "anthropic"],
+      "note": "Steelman and dismantle the benign explanation. Backbone proxy + BGP anycast + embedded CDN = full chain",
+      "existing": true
+    },
+    {
+      "slug": "ttl-drift-check",
+      "probes": ["mtr", "tcpdump", "dmesg"],
+      "targets": ["openai_ws", "openai_https", "openai_api", "anthropic", "github"],
+      "note": "Longitudinal TTL monitoring — has the hop count or latency profile changed since initial probing?",
+      "existing": false
+    },
+    {
+      "slug": "quic-retest",
+      "probes": ["tcpdump", "curl"],
+      "targets": ["openai_ws", "openai_https"],
+      "note": "Re-test QUIC vs TCP asymmetry. Has the middlebox adapted? Does HTTP/3 still bypass?",
+      "existing": false
+    },
+    {
+      "slug": "dns-integrity",
+      "probes": ["dig", "dmesg", "mtr"],
+      "targets": ["openai_ws", "openai_https", "openai_api", "anthropic"],
+      "note": "Compare DNS resolution via system resolver vs DoH vs DoT. Check for DNS-layer manipulation.",
+      "existing": false
+    },
+    {
+      "slug": "cert-divergence",
+      "probes": ["openssl", "mtr"],
+      "targets": ["openai_ws", "openai_https", "openai_api", "anthropic", "github"],
+      "note": "Compare TLS certificate fingerprints observed through Cogent vs from a non-Cogent path. Do the certs differ?",
+      "existing": false
+    },
+    {
+      "slug": "i2p-corruption-repro",
+      "probes": ["tcpdump", "dmesg"],
+      "targets": [],
+      "note": "Reproduce and document I2P tunnel data corruption. Capture the byte-level evidence of TCP checksum recalculation across proxy boundaries.",
+      "existing": false
+    },
+    {
+      "slug": "fastly-convergence",
+      "probes": ["mtr", "tcpdump"],
+      "targets": ["openai_ws", "openai_https"],
+      "note": "Fastly showed same TTL 55 / 9 hops as Cloudflare. Probe Fastly-fronted services specifically — is it the same convergent routing?",
+      "existing": false
+    }
+  ],
+  "completed": ["the-silent-hop", "websocket-downgrade", "quic-proof", "all-roads-through-ord", "against-the-mundane"]
+}

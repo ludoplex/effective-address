@@ -1,0 +1,104 @@
+name: MITM Investigation Probe
+
+# This workflow is triggered manually. The probes MUST run on the
+# investigation host (not GitHub Actions runners) since the network
+# path through Cogent is what we're measuring. Run locally with:
+#
+#   ANTHROPIC_API_KEY=... npx tsx scripts/generate-mitm-post.ts
+#
+# Or use this workflow with a self-hosted runner on the investigation host.
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: 'AI provider (anthropic or openai)'
+        required: false
+        default: 'anthropic'
+        type: choice
+        options:
+          - anthropic
+          - openai
+      probe_duration:
+        description: 'tcpdump capture duration in seconds'
+        required: false
+        default: '30'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: mitm-probe
+  cancel-in-progress: false
+
+jobs:
+  probe-and-generate:
+    # Requires a self-hosted runner on the investigation host.
+    # The runner must have: mtr, tcpdump (with capture permissions),
+    # dig, openssl, curl, node 22+
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run probes and generate article
+        id: generate
+        env:
+          AI_PROVIDER: ${{ inputs.provider || 'anthropic' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PROBE_DURATION: ${{ inputs.probe_duration || '30' }}
+        run: npx tsx scripts/generate-mitm-post.ts
+
+      - name: Commit and push
+        run: |
+          git config user.name "mitm-probe[bot]"
+          git config user.email "mitm-probe[bot]@users.noreply.github.com"
+          git add src/content/blog/mitm-*.md scripts/mitm-manifest.json
+          git commit -m "mitm: $(date -u +%Y-%m-%d) — ${{ steps.generate.outputs.title }}"
+          git push
+
+  deploy:
+    needs: probe-and-generate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npx astro build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
