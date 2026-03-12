@@ -17,5 +17,10 @@
     "@astrojs/sitemap": "^3.7.1",
     "astro": "^6.0.3",
     "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "openai": "^6.27.0",
+    "tsx": "^4.21.0"
   }
 }

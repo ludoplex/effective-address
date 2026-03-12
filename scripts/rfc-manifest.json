@@ -1,0 +1,19 @@
+{
+  "description": "RFC reading order. Each entry becomes an 'RFCs in Context' article with deep web research.",
+  "files": [
+    { "rfc": 791, "title": "Internet Protocol", "note": "IPv4 — the packet format everything else rides on. Jon Postel's original design vs what we actually use." },
+    { "rfc": 793, "title": "Transmission Control Protocol", "note": "TCP — reliable delivery, sequence numbers, the state machine. The thing hop 8 owns." },
+    { "rfc": 768, "title": "User Datagram Protocol", "note": "UDP — the simplicity that QUIC exploits to bypass middleboxes." },
+    { "rfc": 1035, "title": "Domain Names - Implementation and Specification", "note": "DNS — the phone book of the internet. Compression pointers, zone transfers, the works." },
+    { "rfc": 2616, "title": "Hypertext Transfer Protocol -- HTTP/1.1", "note": "HTTP/1.1 — the protocol that ate the world. Connection management, chunked encoding, the upgrade mechanism." },
+    { "rfc": 6455, "title": "The WebSocket Protocol", "note": "WebSocket — persistent bidirectional over HTTP Upgrade. The protocol being killed at hop 8." },
+    { "rfc": 9000, "title": "QUIC: A UDP-Based Multiplexed and Secure Transport", "note": "QUIC — encrypted transport that middleboxes can't touch. Why it succeeds where TCP fails." },
+    { "rfc": 8446, "title": "The Transport Layer Security (TLS) Protocol Version 1.3", "note": "TLS 1.3 — the encryption layer. ClientHello, SNI, and why transparent proxies can still see where you're going." },
+    { "rfc": 4271, "title": "A Border Gateway Protocol 4 (BGP-4)", "note": "BGP — how the internet routes. AS boundaries, peering, and why hop 8 sits where it does." },
+    { "rfc": 792, "title": "Internet Control Message Protocol", "note": "ICMP — ping, traceroute, and the messages routers aren't required to send. Why hop 8 stays silent." },
+    { "rfc": 826, "title": "An Ethernet Address Resolution Protocol", "note": "ARP — layer 2 to layer 3 resolution. The thing you poison when you're on the same segment." },
+    { "rfc": 2460, "title": "Internet Protocol, Version 6", "note": "IPv6 — the future that's been arriving for 25 years. Extension headers, flow labels, and why transition is hard." }
+  ],
+  "completed": [],
+  "contact": "theanderproject@gmail.com"
+}

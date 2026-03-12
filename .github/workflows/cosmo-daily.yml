@@ -1,0 +1,95 @@
+name: Daily Cosmopolitan Article
+
+on:
+  schedule:
+    # 06:00 UTC daily (midnight CST)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: 'AI provider (anthropic or openai)'
+        required: false
+        default: 'anthropic'
+        type: choice
+        options:
+          - anthropic
+          - openai
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cosmo-daily
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install network tools
+        run: sudo apt-get update && sudo apt-get install -y mtr-tiny
+
+      - name: Generate article
+        id: generate
+        env:
+          AI_PROVIDER: ${{ inputs.provider || secrets.AI_PROVIDER || 'anthropic' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npx tsx scripts/generate-cosmo-post.ts
+
+      - name: Commit and push
+        run: |
+          git config user.name "cosmo-daily[bot]"
+          git config user.email "cosmo-daily[bot]@users.noreply.github.com"
+          git add src/content/blog/cosmo-*.md scripts/cosmo-manifest.json
+          git commit -m "cosmo: $(date -u +%Y-%m-%d) — ${{ steps.generate.outputs.title }}"
+          git push
+
+  deploy:
+    needs: generate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npx astro build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
