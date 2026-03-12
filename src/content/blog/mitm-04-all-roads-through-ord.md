@@ -71,7 +71,42 @@ If Cogent's nearest Cloudflare peering were in Denver (~600km from typical Vyve 
 
 The MTR traces also revealed that Anthropic (api.anthropic.com) takes a different Cogent router (38.142.64.154) than all three OpenAI endpoints (38.122.181.134). Two different internal Cogent paths. Yet both arrive at the same Cloudflare backbone entry point (141.101.73.16) with the same total hop count and the same final latency.
 
-In normal anycast, different destination prefixes follow different BGP paths to different PoPs. Here, different paths converge to the same result. That's consistent with a convergence point before Cogent — a device at hop 8 that routes everything to the same destination regardless of which Cogent router comes next.
+In normal anycast, different destination prefixes follow different BGP paths to different PoPs. Here, different paths converge to the same result.
+
+## The mechanism: anycast hijacking within the backbone
+
+This is the piece that makes the entire chain work.
+
+CDNs like Cloudflare and Fastly use **anycast** — the same IP prefix is announced via BGP from hundreds of data centers worldwide. Your traffic goes to whichever PoP is "nearest" in BGP terms. From central US, that should be Denver, Dallas, or Kansas City.
+
+But **"nearest" is a BGP routing decision, and Cogent controls BGP routing for traffic transiting their backbone.** Cogent can:
+
+1. Announce Cloudflare/Fastly anycast prefixes from within their own network — or route them to an embedded CDN PoP they host internally
+2. Make that route "shorter" in BGP path length than the legitimate CDN PoP in Denver
+3. All CDN-destined traffic from Vyve subscribers lands at Cogent's chosen termination point
+
+This is why every Cloudflare IP shows identical TTL with sub-millisecond latency from hop 8. The traffic isn't going to Chicago or Denver. It's going to a termination point **local to Cogent's backbone infrastructure** — physically colocated with or embedded within the same facility as the TCP proxy.
+
+## Embedded CDN PoPs and TLS key access
+
+CDNs actively deploy servers inside backbone provider networks as a performance feature. Cloudflare's [Network Interconnect](https://www.cloudflare.com/network-interconnect/) program and similar initiatives place TLS-terminating CDN servers inside transit provider facilities. These servers hold **legitimate TLS private keys** for every domain they front — that's how they terminate HTTPS.
+
+If Cogent hosts embedded Cloudflare/Fastly PoPs in their facilities, they have physical access to servers holding valid TLS keys for millions of domains. Traffic is anycast-hijacked to these local PoPs, TLS is terminated with real certificates (no forged certs, no compromised CA needed), and the plaintext is accessible at the point of termination.
+
+The full chain:
+
+```
+Vyve subscriber → TCP to Cloudflare anycast IP
+  → Cogent backbone proxy (hides as silent hop, tracks TCP state)
+  → BGP anycast routes traffic to embedded CDN PoP inside Cogent
+  → Embedded PoP terminates TLS with legitimate CDN certificate
+  → Plaintext accessible to Cogent at point of termination
+  → Traffic re-originated to real destination or answered locally
+```
+
+No certificate forgery. No compromised certificate authority. No breach of Cloudflare corporate infrastructure. Just a backbone provider exercising physical access to CDN hardware deployed inside their own facilities, combined with BGP control over anycast routing for their transit customers.
+
+The "All Roads Through ORD" title was misleading. The roads don't go through ORD. They go through Cogent's interception point, wherever that physically sits. The anycast hijack makes it local.
 
 ---
 
