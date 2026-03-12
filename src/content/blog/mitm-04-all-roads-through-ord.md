@@ -71,7 +71,7 @@ If Cogent's nearest Cloudflare peering were in Denver (~600km from typical Vyve 
 
 The MTR traces also revealed that Anthropic (api.anthropic.com) takes a different Cogent router (38.142.64.154) than all three OpenAI endpoints (38.122.181.134). Two different internal Cogent paths. Yet both arrive at the same Cloudflare backbone entry point (141.101.73.16) with the same total hop count and the same final latency.
 
-In normal anycast, different destination prefixes follow different BGP paths to different PoPs. Here, different paths converge to the same result.
+In normal anycast, different destination prefixes follow different BGP paths to different PoPs. Here, different paths converge to the same result. That's consistent with a convergence point within Cogent's backbone that routes everything to the same destination regardless of which Cogent router comes next.
 
 ## The mechanism: anycast hijacking within the backbone
 

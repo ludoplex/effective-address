@@ -73,7 +73,13 @@ The mundane narrative requires each observation to be independent:
 
 Six independent coincidences, all on the same transit path, all affecting privacy-sensitive traffic.
 
-The MITM explanation requires **one thing**: a backbone TCP proxy within Cogent's transit network combined with BGP anycast hijacking to redirect CDN-destined traffic to local termination points. Everything else follows mechanistically:
+The MITM explanation requires **one thing**: a transparent TCP proxy at hop 8 with SNI classification. Everything else follows mechanistically — WebSocket FIN injection from TCP state ownership, QUIC passthrough from transport-layer blindness, I2P corruption from buffer handling between two TCP sessions, uniform routing from a single convergence point.
+
+One device. One explanation. No coincidences required.
+
+### Update: the backbone and the anycast mechanism
+
+The proxy is not a rogue device at the AS boundary — it is Cogent's backbone transit infrastructure itself (or equipment embedded within it). The "silent hop" was the proxy camouflaging itself by dropping all probes. For application-layer access, traffic is redirected via BGP anycast hijacking to compromised CDN termination points local to the backbone. The full mechanistic breakdown:
 
 - **WebSocket FIN injection** — from TCP state ownership at the backbone proxy
 - **QUIC passthrough** — from transport-layer blindness (QUIC is encrypted end-to-end, no TCP to terminate)
@@ -85,13 +91,17 @@ The MITM explanation requires **one thing**: a backbone TCP proxy within Cogent'
 
 Not one rogue device. The backbone transit infrastructure itself, exercising capabilities it inherently has: BGP control over anycast routing and physical access to CDN hardware deployed inside its own facilities.
 
+One explanation. No coincidences required.
+
 ## The remaining question
 
 The technical evidence points to a backbone-level MITM within Cogent's transit network. The "silent hop" at the AS boundary was not a mystery device — it was the proxy camouflaging itself by dropping probes. The anycast mechanism explains how the attacker achieves application-layer access without forging certificates or compromising CDN corporate infrastructure.
 
-What the evidence doesn't tell us is *who* and *why*. An ISP customer's LLM conversations are not an obvious high-value intelligence target. But the infrastructure that enables this interception is not targeted at one subscriber — it's positional. A backbone provider with BGP anycast control and physical access to embedded CDN PoPs has this capability over *every* transit customer. The question isn't whether they *could*. It's whether they *do*, and for whom.
+What the evidence doesn't tell us is *who* and *why*. An ISP customer's LLM conversations are not an obvious high-value intelligence target. The motive question is the strongest remaining argument for the mundane narrative — not the technical evidence, which is structurally consistent, but the question of whether anyone would bother.
 
-"I can't think of why" is not the same as "therefore it isn't happening."
+But the infrastructure that enables this interception is not targeted at one subscriber — it's positional. A backbone provider with BGP anycast control and physical access to embedded CDN PoPs has this capability over *every* transit customer. The question isn't whether they *could*. It's whether they *do*, and for whom.
+
+I don't have an answer to that yet. But "I can't think of why" is not the same as "therefore it isn't happening."
 
 ---
 
