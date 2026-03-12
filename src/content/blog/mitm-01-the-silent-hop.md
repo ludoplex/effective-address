@@ -47,4 +47,4 @@ This is the first post in a series documenting what I found when I started pulli
 
 ---
 
-*This is Part 1 of the [Infrastructure MITM Investigation](/transit-observer/blog) series.*
+*This is Part 1 of the [Infrastructure MITM Investigation](/effective-address/blog) series.*

@@ -7,7 +7,7 @@ tags: ['personal']
 
 # An Open Note
 
-To the person ultimately responsible for the man-in-the-middle interference documented in the [Infrastructure MITM Investigation](/transit-observer/blog) series on this site:
+To the person ultimately responsible for the man-in-the-middle interference documented in the [Infrastructure MITM Investigation](/effective-address/blog) series on this site:
 
 There is a standing challenge to you to fight me in MMA.
 

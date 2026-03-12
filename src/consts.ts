@@ -1,2 +1,2 @@
-export const SITE_TITLE = 'Transit Observer';
-export const SITE_DESCRIPTION = 'Security research, infrastructure analysis, and adversarial network forensics.';
+export const SITE_TITLE = 'Effective Address';
+export const SITE_DESCRIPTION = 'Reverse engineering, DIY electronics, x86, ARM, C, assembly, binary formats, and things that probably shouldn\'t work but do.';

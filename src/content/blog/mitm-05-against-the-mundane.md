@@ -85,4 +85,4 @@ I don't have an answer to that yet. But "I can't think of why" is not the same a
 
 ---
 
-*This is Part 5 of the [Infrastructure MITM Investigation](/transit-observer/blog) series.*
+*This is Part 5 of the [Infrastructure MITM Investigation](/effective-address/blog) series.*

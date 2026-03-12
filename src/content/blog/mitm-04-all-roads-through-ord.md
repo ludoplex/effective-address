@@ -75,4 +75,4 @@ In normal anycast, different destination prefixes follow different BGP paths to 
 
 ---
 
-*This is Part 4 of the [Infrastructure MITM Investigation](/transit-observer/blog) series. Next: [Against the Mundane Narrative](/transit-observer/blog/mitm-05-against-the-mundane) — systematically dismantling the "boring infrastructure" explanation.*
+*This is Part 4 of the [Infrastructure MITM Investigation](/effective-address/blog) series. Next: [Against the Mundane Narrative](/effective-address/blog/mitm-05-against-the-mundane) — systematically dismantling the "boring infrastructure" explanation.*

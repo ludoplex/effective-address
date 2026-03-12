@@ -9,7 +9,7 @@ tags: ['networking', 'security', 'quic', 'tcp', 'mitm']
 
 # The QUIC Proof
 
-In the [previous post](/transit-observer/blog/mitm-02-websocket-downgrade), I documented how WebSocket connections to OpenAI are killed with correct-sequence TCP FINs. What happens next is the strongest single piece of evidence in this investigation.
+In the [previous post](/effective-address/blog/mitm-02-websocket-downgrade), I documented how WebSocket connections to OpenAI are killed with correct-sequence TCP FINs. What happens next is the strongest single piece of evidence in this investigation.
 
 ## TCP fails, QUIC succeeds
 
@@ -73,4 +73,4 @@ No collusion between ISP and CDN required. No compromise of Cloudflare or OpenAI
 
 ---
 
-*This is Part 3 of the [Infrastructure MITM Investigation](/transit-observer/blog) series. Next: [All Roads Through ORD](/transit-observer/blog/mitm-04-all-roads-through-ord) — TTL analysis reveals every Cloudflare anycast IP is routed to the same point, while other CDNs route correctly.*
+*This is Part 3 of the [Infrastructure MITM Investigation](/effective-address/blog) series. Next: [All Roads Through ORD](/effective-address/blog/mitm-04-all-roads-through-ord) — TTL analysis reveals every Cloudflare anycast IP is routed to the same point, while other CDNs route correctly.*

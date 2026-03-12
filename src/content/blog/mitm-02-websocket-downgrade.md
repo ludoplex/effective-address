@@ -9,7 +9,7 @@ tags: ['networking', 'security', 'tcpdump', 'websocket', 'mitm']
 
 # The WebSocket Downgrade
 
-When I started investigating the [silent hop](/transit-observer/blog/mitm-01-the-silent-hop), the first hard evidence came from packet captures. WebSocket connections to OpenAI weren't just failing — they were being killed in a very specific way.
+When I started investigating the [silent hop](/effective-address/blog/mitm-01-the-silent-hop), the first hard evidence came from packet captures. WebSocket connections to OpenAI weren't just failing — they were being killed in a very specific way.
 
 ## The pattern
 
@@ -66,4 +66,4 @@ This is not theoretical. It's the exact mechanism used by the VLESS Reality prot
 
 ---
 
-*This is Part 2 of the [Infrastructure MITM Investigation](/transit-observer/blog) series. Next: [The QUIC Proof](/transit-observer/blog/mitm-03-quic-proof) — why UDP traffic succeeds where TCP fails, and what that tells us about the device at hop 8.*
+*This is Part 2 of the [Infrastructure MITM Investigation](/effective-address/blog) series. Next: [The QUIC Proof](/effective-address/blog/mitm-03-quic-proof) — why UDP traffic succeeds where TCP fails, and what that tells us about the device at hop 8.*
