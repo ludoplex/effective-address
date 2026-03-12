@@ -1,9 +1,10 @@
 #!/usr/bin/env npx tsx
 /**
- * generate-mitm-post.ts — "Infrastructure MITM Investigation" series plugin.
+ * generate-mitm-post.ts — Infrastructure-side MITM detection tooling.
  *
- * Runs live network probes (mtr, tcpdump, dmesg, dig, openssl, curl)
- * as source material, then generates analysis with the LLM.
+ * Runs live network probes (mtr, tcpdump, dmesg, dig, openssl, curl),
+ * queries flow logs and eBPF instrumentation, then generates analysis
+ * with the LLM for the "Infrastructure MITM Investigation" blog series.
  *
  * Must be run on the investigation host (not GitHub Actions) since
  * probes need to originate from the Vyve/Cogent path.
@@ -176,6 +177,80 @@ function runCurl(hosts: string[]): string {
   return results.join("\n\n");
 }
 
+function runFlowLog(): string {
+  const flowLog = join(process.env.HOME ?? "/home/compturerstore", "process-net-monitor/logs/current.jsonl");
+  console.log("  flowlog analysis");
+  try {
+    const raw = readFileSync(flowLog, "utf-8");
+    const lines = raw.split("\n").filter(Boolean);
+    const total = lines.length;
+    // Extract last 500 lines + summary stats
+    const recent = lines.slice(-500).join("\n");
+    // Count unique remote IPs and processes
+    const ips = new Set<string>();
+    const procs = new Set<string>();
+    for (const line of lines) {
+      try {
+        const obj = JSON.parse(line);
+        if (obj.remote_ip) ips.add(obj.remote_ip);
+        if (obj.process) procs.add(obj.process);
+      } catch { /* skip malformed */ }
+    }
+    return `### Flow log summary\nTotal records: ${total}\nUnique remote IPs: ${ips.size}\nUnique processes: ${procs.size}\n\n### Last 500 flow records\n\`\`\`json\n${recent}\n\`\`\``;
+  } catch (e) {
+    return `### Flow log\n(not available: ${e})`;
+  }
+}
+
+function runEbpf(hosts: string[]): string {
+  const results: string[] = [];
+
+  // tcpretrans — TCP retransmissions (proxy-induced state issues)
+  console.log("  ebpf: tcpretrans (10s sample)");
+  try {
+    const out = execSync(
+      "timeout 10 tcpretrans-bpfcc 2>/dev/null || timeout 10 /usr/share/bcc/tools/tcpretrans 2>/dev/null || echo '(tcpretrans not available)'",
+      { encoding: "utf-8", timeout: 15_000 }
+    );
+    results.push(`### eBPF: tcpretrans (10s)\n\`\`\`\n${out.slice(0, 5000)}\n\`\`\``);
+  } catch { results.push("### eBPF: tcpretrans\n(failed — may need root)"); }
+
+  // tcpdrop — dropped TCP packets
+  console.log("  ebpf: tcpdrop (10s sample)");
+  try {
+    const out = execSync(
+      "timeout 10 tcpdrop-bpfcc 2>/dev/null || timeout 10 /usr/share/bcc/tools/tcpdrop 2>/dev/null || echo '(tcpdrop not available)'",
+      { encoding: "utf-8", timeout: 15_000 }
+    );
+    results.push(`### eBPF: tcpdrop (10s)\n\`\`\`\n${out.slice(0, 5000)}\n\`\`\``);
+  } catch { results.push("### eBPF: tcpdrop\n(failed — may need root)"); }
+
+  // tcpconnect — new TCP connections during sample
+  console.log("  ebpf: tcpconnect (10s sample)");
+  try {
+    const out = execSync(
+      "timeout 10 tcpconnect-bpfcc 2>/dev/null || timeout 10 /usr/share/bcc/tools/tcpconnect 2>/dev/null || echo '(tcpconnect not available)'",
+      { encoding: "utf-8", timeout: 15_000 }
+    );
+    results.push(`### eBPF: tcpconnect (10s)\n\`\`\`\n${out.slice(0, 5000)}\n\`\`\``);
+  } catch { results.push("### eBPF: tcpconnect\n(failed — may need root)"); }
+
+  return results.join("\n\n");
+}
+
+function querySqlite(dbPath: string, query: string, label: string): string {
+  console.log(`  sqlite: ${label}`);
+  try {
+    const out = execSync(
+      `sqlite3 -header -column "${dbPath}" "${query}" 2>/dev/null`,
+      { encoding: "utf-8", timeout: 10_000 }
+    );
+    return `### SQLite: ${label}\n\`\`\`\n${out.slice(0, 5000)}\n\`\`\``;
+  } catch (e) {
+    return `### SQLite: ${label}\n(query failed: ${e})`;
+  }
+}
+
 // ── Probe orchestration ────────────────────────────────
 
 function runProbes(entry: MitmEntry, manifest: Manifest): string {
@@ -213,6 +288,26 @@ function runProbes(entry: MitmEntry, manifest: Manifest): string {
       case "curl":
         sections.push(runCurl(hosts));
         break;
+      case "flowlog":
+        sections.push(runFlowLog());
+        break;
+      case "ebpf":
+        sections.push(runEbpf(hosts));
+        break;
+      case "sqlite": {
+        const home = process.env.HOME ?? "/home/compturerstore";
+        sections.push(querySqlite(
+          join(home, ".openclaw/memory/main.sqlite"),
+          "SELECT * FROM memory ORDER BY rowid DESC LIMIT 50;",
+          "openclaw recent memory"
+        ));
+        sections.push(querySqlite(
+          join(home, ".codex/logs_1.sqlite"),
+          "SELECT * FROM logs ORDER BY rowid DESC LIMIT 50;",
+          "codex recent logs"
+        ));
+        break;
+      }
       default:
         sections.push(`### ${probe}\n(unknown probe type)`);
     }
@@ -227,7 +322,7 @@ function runProbes(entry: MitmEntry, manifest: Manifest): string {
   return result;
 }
 
-// ── Plugin ─────────────────────────────────────────────
+// ── Infrastructure-side MITM detection tooling ────────
 
 const mitmPlugin: SeriesPlugin = {
   prefix: "mitm",
@@ -278,6 +373,13 @@ Style:
 - Note anything that changed since previous probing
 - Keep it technical but human — Michael Reeves energy, not textbook energy
 - DO NOT include any provenance or disclaimer section — that will be appended automatically
+
+PROBE DATA REDACTION:
+The probe data below comes from a live investigation host. When quoting raw output:
+- Replace the investigation host's source IP with [src] in tcpdump/mtr output
+- Replace any LAN/residential IPs with [redacted]
+- Infrastructure IPs (Cogent 38.x.x.x/154.x.x.x, Cloudflare 104.x.x.x/172.64.x.x, Fastly 151.x.x.x) are evidence — keep them
+- Strip any hostnames that could identify the subscriber or their LAN
 
 Output format: Write ONLY the markdown body (no frontmatter). Start with a # heading.`;
   },

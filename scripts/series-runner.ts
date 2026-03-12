@@ -26,6 +26,34 @@ import { resolveConfig, verifyCertPin, generate, type LLMConfig } from "./llm.js
 const __dirname = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 const BLOG_DIR = join(__dirname, "..", "src", "content", "blog");
 
+// ── Redaction rules (appended to every system prompt) ──
+
+const REDACTION_RULES = `
+
+MANDATORY REDACTION RULES — you MUST follow these before generating any output:
+
+The following people and entities must NEVER appear by name in any generated article:
+- Vincent L. Anderson (the publisher / site operator)
+- Rachel (associated person)
+- Will (associated person)
+- Mighty House Inc.
+- DSAIC
+- Computer Store
+- NSA, FBI, CIA
+- DHL
+
+If the source material or probe data contains references to any of the above, redact them (e.g., "[redacted]", "a logistics company", "a government agency", "a private individual"). Do not hint at their identity.
+
+The following entities are PUBLIC and should be named freely:
+- Cogent (AS174), Vyve Broadband, Cloudflare, Fastly, Akamai, OpenAI, Anthropic, Google, GitHub, and any other public infrastructure/CDN/tech company relevant to the technical analysis.
+
+Additionally, redact:
+- Any subscriber/residential IP addresses (RFC1918, CGNAT 100.64.x.x, or ISP-assigned IPs like 24.112.x.x)
+- Any LAN hostnames or MAC addresses
+- Any API keys, tokens, or credentials that appear in probe data
+
+Infrastructure IPs (Cogent, Cloudflare, Fastly backbone addresses) should NOT be redacted — they are evidence.`;
+
 // ── Plugin interface ───────────────────────────────────
 
 export interface SeriesPlugin {
@@ -127,8 +155,8 @@ export async function runSeries(plugin: SeriesPlugin): Promise<void> {
   console.log(`Tracing network path to ${apiHost}...`);
   const networkPath = traceNetworkPath(apiHost);
 
-  // Build prompts
-  const systemPrompt = plugin.buildSystemPrompt(articleNum);
+  // Build prompts (redaction rules appended to every system prompt)
+  const systemPrompt = plugin.buildSystemPrompt(articleNum) + REDACTION_RULES;
   const userPrompt = plugin.buildUserPrompt(previous, source, entry, articleNum);
 
   // Generate

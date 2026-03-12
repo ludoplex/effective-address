@@ -1,4 +1,4 @@
-name: MITM Investigation Probe
+name: Infrastructure-Side MITM Detection
 
 # This workflow is triggered manually. The probes MUST run on the
 # investigation host (not GitHub Actions runners) since the network
