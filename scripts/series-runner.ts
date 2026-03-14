@@ -123,6 +123,21 @@ export async function runSeries(plugin: SeriesPlugin): Promise<void> {
   console.log(`Series: ${plugin.seriesName}`);
   console.log(`Provider: ${config.provider}, Model: ${config.model}`);
 
+  // Pre-flight: ensure the required API key is configured
+  const providerKeyMap: Record<string, string> = {
+    anthropic: "ANTHROPIC_API_KEY",
+    openai: "OPENAI_API_KEY",
+  };
+  const requiredKey = providerKeyMap[config.provider];
+  if (!requiredKey || !process.env[requiredKey]) {
+    const missing = requiredKey ?? `API key for unknown provider "${config.provider}"`;
+    console.log(
+      `Skipping article generation: ${missing} is not set. ` +
+        `Configure the secret in your repository settings to enable generation.`
+    );
+    process.exit(0);
+  }
+
   // Cert pin verification (Rule 2)
   if (!verifyCertPin(config.provider)) {
     process.exit(2);
